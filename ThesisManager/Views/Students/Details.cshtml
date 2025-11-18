@@ -1,0 +1,113 @@
+@model ThesisManager.Models.Student
+@{
+    Layout = "_Layout";
+}
+
+<h2>معلومات الطالب</h2>
+<div class="mb-3">
+    <strong>الاسم:</strong> @Model.Name <br/>
+    <strong>الرقم الجامعي:</strong> @Model.S_Id <br/>
+    <strong>رقم الهوية:</strong> @Model.Iqaamah_Id <br/>
+    <strong>الهاتف:</strong> @Model.Tel <br/>
+    <strong>البريد الاكتروني:</strong> @Model.Email <br/>
+    <strong>خطوة:</strong> @(Model.NumOfStep?.Name ?? "—") <br/>
+    <strong>تاريخ الإنجاز:</strong> @Model.Deadline.ToString("yyyy-MM-dd")
+</div>
+
+<hr />
+<h3>الفكر</h3>
+<table class="table">
+    <thead><tr><th>عنوان الفكر</th><th>المرشد الأكاديمي</th><th>تاريخ التقديم</th><th>اعتمد؟</th></tr></thead>
+    <tbody>
+    @foreach(var d in Model.Drafts ?? Enumerable.Empty<ThesisManager.Models.DissertationDraft>())
+    {
+        <tr>
+            <td>@d.Title</td>
+            <td>@d.StudentGuide?.Name</td>
+            <td>@d.SubmissionDate.ToString("yyyy-MM-dd")</td>
+            <td>@(d.IsApproved.HasValue ? (d.IsApproved.Value ? "اعتمد" : "لم يعتمد") : "—")</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<form method="post" asp-action="AddDraft" class="mb-4">
+    <input type="hidden" name="studentId" value="@Model.Id" />
+    <div class="row">
+        <div class="col-md-4 mb-2">
+            <input class="form-control" name="title" placeholder="عنوان الفكر" />
+        </div>
+        <div class="col-md-3 mb-2">
+            <select class="form-select" name="studentGuideId">
+                @foreach(var g in ViewBag.StudentGuides)
+                {
+                    <option value="@g.Id">@g.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 mb-2">
+            <input type="date" class="form-control" name="submissionDate" />
+        </div>
+        <div class="col-md-2 mb-2">
+            <input type="date" class="form-control" name="newDeadline" title="Update student's deadline" />
+        </div>
+        <div class="col-md-1 mb-2">
+            <button class="btn btn-secondary">أضف</button>
+        </div>
+    </div>
+</form>
+
+<hr />
+<h3>الرسالة</h3>
+<table class="table">
+    <thead><tr><th>عنوان الرسالة</th><th>المشرف</th><th>تاريخ التقديم</th><th>صدر قرار المناقشة؟</th></tr></thead>
+    <tbody>
+    @foreach(var d in Model.Dissertations ?? Enumerable.Empty<ThesisManager.Models.Dissertation>())
+    {
+        <tr>
+            <td>@d.Title</td>
+            <td>@d.Supervisor?.Name</td>
+            <td>@d.SubmissionDate.ToString("yyyy-MM-dd")</td>
+            <td>@(d.Defence != null ? "صدر المناقشة" : "لم يصدر")</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<form method="post" asp-action="AddDissertation" class="mb-4">
+    <input type="hidden" name="studentId" value="@Model.Id" />
+    <div class="row">
+        <div class="col-md-4 mb-2"><input class="form-control" name="title" placeholder="عنوان الرسالة" /></div>
+        <div class="col-md-3 mb-2">
+            <select class="form-select" name="supervisorId">
+                @foreach(var s in ViewBag.Supervisors)
+                {
+                    <option value="@s.Id">@s.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 mb-2"><input type="date" class="form-control" name="submissionDate" /></div>
+        <div class="col-md-2 mb-2"><input type="date" class="form-control" name="newDeadline" title="Update student's deadline" /></div>
+        <div class="col-md-1 mb-2"><button class="btn btn-secondary">أضف</button></div>
+    </div>
+</form>
+
+<hr />
+<h3>أضف قرار المناقشة</h3>
+<p>هل صدر قرار المناقشة للرسالة؟ أضف تاريخها:</p>
+<form method="post" asp-action="AddDefence">
+    <input type="hidden" name="studentId" value="@Model.Id" />
+    <div class="row">
+        <div class="col-md-6">
+            <select name="dissertationId" class="form-select">
+                @foreach(var d in Model.Dissertations ?? Enumerable.Empty<ThesisManager.Models.Dissertation>())
+                {
+                    <option value="@d.Id">@d.Title</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-warning">أضف المناقشة</button>
+        </div>
+    </div>
+</form>

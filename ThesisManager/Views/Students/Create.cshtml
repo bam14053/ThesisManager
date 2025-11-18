@@ -1,0 +1,41 @@
+@model ThesisManager.Models.Student
+@{
+    Layout = "_Layout";
+}
+<h2>إضافة طالب</h2>
+<form method="post" asp-action="Create">
+    <div class="mb-3">
+        <label>اسم الطالب</label>
+        <input class="form-control" asp-for="Name" />
+    </div>
+    <div class="mb-3">
+        <label>الرقم الجامعي</label>
+        <input class="form-control" asp-for="S_Id" />
+    </div>
+    <div class="mb-3">
+        <label>رقم الهوية</label>
+        <input class="form-control" asp-for="Iqaamah_Id" />
+    </div>
+    <div class="mb-3">
+        <label>الهاتف</label>
+        <input class="form-control" asp-for="Tel" />
+    </div>
+    <div class="mb-3">
+        <label>البريد الاكتروني</label>
+        <input class="form-control" asp-for="Email" />
+    </div>
+    <div class="mb-3">
+        <label>خطوة</label>
+        <select class="form-select" name="NumOfStepId">
+            @foreach(var ns in ViewBag.NumOfSteps)
+            {
+                <option value="@ns.Id">@ns.Name</option>
+            }
+        </select>
+    </div>
+    <div class="mb-3">
+        <label>تاريح لإنجاز</label>
+        <input type="date" class="form-control" name="Deadline" />
+    </div>
+    <button class="btn btn-primary" type="submit">أنشأ</button>
+</form>

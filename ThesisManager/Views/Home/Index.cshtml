@@ -1,0 +1,41 @@
+﻿@model IEnumerable<ThesisManager.Models.Student>
+@{
+    Layout = "_Layout";
+    var sortBy = ViewBag.SortBy as string ?? "deadline";
+    var asc = (bool)(ViewBag.Asc ?? true);
+    Func<string, string> sortUrl = key => Url.Action("Index", "Home", new { sortBy = key, asc = (sortBy == key ? !asc : true) });
+}
+
+<div class="text-center mb-4">
+    <a class="btn btn-primary big-btn me-3" href="@Url.Action("Create","Students")">إضافة طالب</a>
+    <a class="btn btn-success big-btn me-3" href="@Url.Action("Create","Supervisors")">إضافة مشرف</a>
+    <a class="btn btn-info big-btn" href="@Url.Action("Create","StudentGuides")">إضافة مرشد أكاديمي</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th><a href="@sortUrl("name")">اسم الطالب</a></th>
+            <th><a href="@sortUrl("s_id")">الرقم الجامعي</a></th>
+            <th><a href="@sortUrl("iqaamah_id")">رقم الهوية</a></th>
+            <th>الهاتف</th>
+            <th>البريد الاكتروني</th>
+            <th><a href="@sortUrl("deadline")">تاريخ لإنجاز</a></th>
+            <th>خطوة</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach(var s in Model)
+    {
+        <tr class="clickable" onclick="location.href='@Url.Action("Details","Students", new { id = s.Id })'">
+            <td>@s.Name</td>
+            <td>@s.S_Id</td>
+            <td>@s.Iqaamah_Id</td>
+            <td>@s.Tel</td>
+            <td>@s.Email</td>
+            <td>@s.Deadline.ToString("yyyy-MM-dd")</td>
+            <td>@(s.NumOfStep?.Name ?? "—")</td>
+        </tr>
+    }
+    </tbody>
+</table>
