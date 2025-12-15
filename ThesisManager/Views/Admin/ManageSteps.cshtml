@@ -1,0 +1,507 @@
+@* Views/Admin/ManageSteps.cshtml - Step Management with Drag & Drop *@
+@model List<ThesisManager.Models.StepDefinition>
+@{
+    ViewData["Title"] = "إدارة الخطوات";
+    Layout = "_Layout";
+}
+
+<div class="content-container">
+    <h2 style="color: var(--primary-blue); margin-bottom: 2rem;">
+        <i class="fas fa-tasks"></i>
+        إدارة خطوات الرسالة
+    </h2>
+
+    <div style="background: #fef3c7; border-right: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+        <p style="margin: 0; color: #92400e;">
+            <i class="fas fa-info-circle"></i>
+            يمكنك سحب الخطوات لإعادة ترتيبها. التغييرات لن تحفظ حتى الضغط على زر "تأكيد"
+        </p>
+    </div>
+
+    <div id="warningMessage" style="display: none; background: #fee2e2; border-right: 4px solid #ef4444; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; color: #991b1b;">
+        <!-- Warning messages will appear here -->
+    </div>
+
+    <!-- Steps List -->
+    <div id="stepsList" class="steps-container">
+        @foreach(var step in Model.OrderBy(s => s.StepNumber))
+        {
+            <div class="step-item" data-step-id="@step.StepNumber">
+                <div class="step-drag-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div class="step-number-badge">@step.StepNumber</div>
+                <div class="step-content">
+                    <div class="step-name-ar">@step.StepNameAr</div>
+                    <div class="step-details">
+                        @if(!string.IsNullOrEmpty(step.StepNameEn))
+                        {
+                            <span>@step.StepNameEn</span>
+                        }
+                        <span style="color: #6b7280;">• @step.DefaultDurationDays يوم</span>
+                    </div>
+                </div>
+                <div class="step-actions">
+                    <button type="button" class="btn-icon btn-icon-primary" onclick="editStep(@step.StepNumber)" title="تعديل">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button type="button" class="btn-icon btn-icon-danger" onclick="confirmDelete(@step.StepNumber)" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Add New Step Button -->
+    <button type="button" class="btn-add-step" onclick="addNewStep()">
+        <i class="fas fa-plus"></i>
+        إضافة خطوة جديدة
+    </button>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid var(--lightest-blue);">
+        <button type="button" class="btn btn-secondary" onclick="cancelChanges()" style="min-width: 150px;">
+            <i class="fas fa-times"></i>
+            إلغاء
+        </button>
+        <button type="button" class="btn btn-primary" onclick="saveChanges()" style="min-width: 150px;">
+            <i class="fas fa-check"></i>
+            تأكيد
+        </button>
+    </div>
+</div>
+
+<!-- Edit Step Modal -->
+<div class="modal-overlay" id="editStepModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">تعديل الخطوة</h3>
+            <button class="close-modal" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <input type="hidden" id="editingStepId" />
+        <div class="form-group">
+            <label>اسم الخطوة (عربي)</label>
+            <input type="text" id="stepNameAr" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <label>اسم الخطوة (إنجليزي)</label>
+            <input type="text" id="stepNameEn" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>المدة الافتراضية (أيام)</label>
+            <input type="number" id="defaultDuration" class="form-control" min="1" required />
+        </div>
+        <button type="button" class="btn btn-primary" onclick="saveStepEdit()" style="width: 100%;">
+            <i class="fas fa-save"></i>
+            حفظ التعديلات
+        </button>
+    </div>
+</div>
+
+<style>
+    .steps-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    }
+
+    .step-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: linear-gradient(135deg, #f0f9ff 0%, white 100%);
+        border: 2px solid var(--lightest-blue);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        cursor: move;
+        transition: all 0.2s;
+    }
+
+    .step-item:hover {
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .step-item.dragging {
+        opacity: 0.5;
+        transform: rotate(2deg);
+    }
+
+    .step-item.drag-over {
+        border-color: var(--primary-blue);
+        border-style: dashed;
+    }
+
+    .step-drag-handle {
+        color: #9ca3af;
+        font-size: 1.2rem;
+        cursor: grab;
+    }
+
+    .step-drag-handle:active {
+        cursor: grabbing;
+    }
+
+    .step-number-badge {
+        background: var(--primary-blue);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .step-content {
+        flex: 1;
+    }
+
+    .step-name-ar {
+        font-weight: bold;
+        color: var(--primary-blue);
+        font-size: 1.1rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .step-details {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .step-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-icon-primary {
+        background: #dbeafe;
+        color: var(--primary-blue);
+    }
+
+    .btn-icon-primary:hover {
+        background: var(--primary-blue);
+        color: white;
+    }
+
+    .btn-icon-danger {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+
+    .btn-icon-danger:hover {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-add-step {
+        width: 100%;
+        padding: 1rem;
+        border: 2px dashed var(--primary-blue);
+        background: transparent;
+        color: var(--primary-blue);
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 1rem;
+    }
+
+    .btn-add-step:hover {
+        background: var(--lightest-blue);
+        border-style: solid;
+    }
+
+    .step-item.new-step {
+        border-color: var(--success-green);
+        background: linear-gradient(135deg, #d1fae5 0%, white 100%);
+    }
+
+    .step-item.deleted {
+        opacity: 0.5;
+        background: #fee2e2;
+        border-color: #ef4444;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        let steps = @Html.Raw(Json.Serialize(Model.Select(s => new {
+            stepNumber = s.StepNumber,
+            stepNameAr = s.StepNameAr,
+            stepNameEn = s.StepNameEn,
+            defaultDurationDays = s.DefaultDurationDays
+        })));
+
+        let deletedSteps = [];
+        let hasChanges = false;
+
+        // Initialize Sortable for drag and drop
+        const stepsList = document.getElementById('stepsList');
+        const sortable = new Sortable(stepsList, {
+            animation: 150,
+            handle: '.step-drag-handle',
+            ghostClass: 'dragging',
+            onEnd: function(evt) {
+                hasChanges = true;
+                updateStepNumbers();
+            }
+        });
+
+        function updateStepNumbers() {
+            const stepItems = document.querySelectorAll('.step-item:not(.deleted)');
+            stepItems.forEach((item, index) => {
+                const badge = item.querySelector('.step-number-badge');
+                badge.textContent = index + 1;
+            });
+        }
+
+        function editStep(stepNumber) {
+            const step = steps.find(s => s.stepNumber === stepNumber);
+            if (!step) return;
+
+            document.getElementById('modalTitle').textContent = `تعديل الخطوة ${stepNumber}`;
+            document.getElementById('editingStepId').value = stepNumber;
+            document.getElementById('stepNameAr').value = step.stepNameAr;
+            document.getElementById('stepNameEn').value = step.stepNameEn || '';
+            document.getElementById('defaultDuration').value = step.defaultDurationDays;
+
+            document.getElementById('editStepModal').classList.add('active');
+        }
+
+        function saveStepEdit() {
+            const stepNumber = parseInt(document.getElementById('editingStepId').value);
+            const nameAr = document.getElementById('stepNameAr').value.trim();
+            const nameEn = document.getElementById('stepNameEn').value.trim();
+            const duration = parseInt(document.getElementById('defaultDuration').value);
+
+            if (!nameAr || !duration) {
+                alert('الرجاء ملء الحقول المطلوبة');
+                return;
+            }
+
+            const step = steps.find(s => s.stepNumber === stepNumber);
+            if (step) {
+                step.stepNameAr = nameAr;
+                step.stepNameEn = nameEn;
+                step.defaultDurationDays = duration;
+
+                // Update UI
+                const stepItem = document.querySelector(`[data-step-id="${stepNumber}"]`);
+                stepItem.querySelector('.step-name-ar').textContent = nameAr;
+                stepItem.querySelector('.step-details').innerHTML = 
+                    (nameEn ? `<span>${nameEn}</span>` : '') + 
+                    `<span style="color: #6b7280;">• ${duration} يوم</span>`;
+
+                hasChanges = true;
+            }
+
+            closeModal();
+        }
+
+        async function confirmDelete(stepNumber) {
+            if (!confirm(`هل أنت متأكد من حذف الخطوة ${stepNumber}؟\n\nتحذير: سيتم حذف جميع السجلات المرتبطة بهذه الخطوة!`)) {
+                return;
+            }
+
+            // Check if step has history
+            const response = await fetch(`@Url.Action("CheckStepUsage", "Admin")?stepNumber=${stepNumber}`);
+            const data = await response.json();
+
+            if (data.hasHistory) {
+                if (!confirm(`تحذير: هذه الخطوة مستخدمة في ${data.count} سجل!\n\nحذف هذه الخطوة سيؤدي إلى حذف جميع السجلات المرتبطة بها.\n\nهل تريد المتابعة؟`)) {
+                    return;
+                }
+            }
+
+            const stepItem = document.querySelector(`[data-step-id="${stepNumber}"]`);
+            stepItem.classList.add('deleted');
+            deletedSteps.push(stepNumber);
+            hasChanges = true;
+            updateStepNumbers();
+        }
+
+        function addNewStep() {
+            const newStepNumber = steps.length + 1;
+            document.getElementById('modalTitle').textContent = 'إضافة خطوة جديدة';
+            document.getElementById('editingStepId').value = 'new';
+            document.getElementById('stepNameAr').value = '';
+            document.getElementById('stepNameEn').value = '';
+            document.getElementById('defaultDuration').value = '30';
+
+            document.getElementById('editStepModal').classList.add('active');
+        }
+
+        function saveStepEdit() {
+            const stepId = document.getElementById('editingStepId').value;
+            const nameAr = document.getElementById('stepNameAr').value.trim();
+            const nameEn = document.getElementById('stepNameEn').value.trim();
+            const duration = parseInt(document.getElementById('defaultDuration').value);
+
+            if (!nameAr || !duration) {
+                alert('الرجاء ملء الحقول المطلوبة');
+                return;
+            }
+
+            if (stepId === 'new') {
+                // Add new step
+                const newStepNumber = steps.length + 1;
+                steps.push({
+                    stepNumber: newStepNumber,
+                    stepNameAr: nameAr,
+                    stepNameEn: nameEn,
+                    defaultDurationDays: duration,
+                    isNew: true
+                });
+
+                // Add to UI
+                const stepItem = document.createElement('div');
+                stepItem.className = 'step-item new-step';
+                stepItem.setAttribute('data-step-id', newStepNumber);
+                stepItem.innerHTML = `
+                    <div class="step-drag-handle">
+                        <i class="fas fa-grip-vertical"></i>
+                    </div>
+                    <div class="step-number-badge">${newStepNumber}</div>
+                    <div class="step-content">
+                        <div class="step-name-ar">${nameAr}</div>
+                        <div class="step-details">
+                            ${nameEn ? `<span>${nameEn}</span>` : ''}
+                            <span style="color: #6b7280;">• ${duration} يوم</span>
+                        </div>
+                    </div>
+                    <div class="step-actions">
+                        <button type="button" class="btn-icon btn-icon-primary" onclick="editStep(${newStepNumber})" title="تعديل">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button type="button" class="btn-icon btn-icon-danger" onclick="confirmDelete(${newStepNumber})" title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                stepsList.appendChild(stepItem);
+                hasChanges = true;
+            } else {
+                // Edit existing step
+                const stepNumber = parseInt(stepId);
+                const step = steps.find(s => s.stepNumber === stepNumber);
+                if (step) {
+                    step.stepNameAr = nameAr;
+                    step.stepNameEn = nameEn;
+                    step.defaultDurationDays = duration;
+
+                    const stepItem = document.querySelector(`[data-step-id="${stepNumber}"]`);
+                    stepItem.querySelector('.step-name-ar').textContent = nameAr;
+                    stepItem.querySelector('.step-details').innerHTML = 
+                        (nameEn ? `<span>${nameEn}</span>` : '') + 
+                        `<span style="color: #6b7280;">• ${duration} يوم</span>`;
+
+                    hasChanges = true;
+                }
+            }
+
+            closeModal();
+        }
+
+        async function saveChanges() {
+            if (!hasChanges) {
+                alert('لا توجد تغييرات لحفظها');
+                return;
+            }
+
+            // Build final steps array with new order
+            const stepItems = document.querySelectorAll('.step-item:not(.deleted)');
+            const orderedSteps = [];
+            
+            stepItems.forEach((item, index) => {
+                const oldStepNumber = parseInt(item.getAttribute('data-step-id'));
+                const step = steps.find(s => s.stepNumber === oldStepNumber);
+                if (step) {
+                    orderedSteps.push({
+                        oldStepNumber: oldStepNumber,
+                        newStepNumber: index + 1,
+                        stepNameAr: step.stepNameAr,
+                        stepNameEn: step.stepNameEn,
+                        defaultDurationDays: step.defaultDurationDays,
+                        isNew: step.isNew || false
+                    });
+                }
+            });
+
+            const data = {
+                steps: orderedSteps,
+                deletedSteps: deletedSteps
+            };
+
+            try {
+                const response = await fetch('@Url.Action("SaveStepsChanges", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('تم حفظ التغييرات بنجاح');
+                    window.location.reload();
+                } else {
+                    document.getElementById('warningMessage').style.display = 'block';
+                    document.getElementById('warningMessage').innerHTML = 
+                        '<i class="fas fa-exclamation-triangle"></i> ' + result.message;
+                }
+            } catch (error) {
+                alert('حدث خطأ أثناء الحفظ: ' + error.message);
+            }
+        }
+
+        function cancelChanges() {
+            if (hasChanges && !confirm('هل أنت متأكد من إلغاء التغييرات؟')) {
+                return;
+            }
+            window.location.href = '@Url.Action("Students", "Admin")';
+        }
+
+        function closeModal() {
+            document.getElementById('editStepModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('editStepModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Warn before leaving if there are unsaved changes
+        window.addEventListener('beforeunload', function(e) {
+            if (hasChanges) {
+                e.preventDefault();
+                e.returnValue = 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟';
+            }
+        });
+    </script>
+}

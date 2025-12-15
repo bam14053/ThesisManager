@@ -1,0 +1,168 @@
+@* Views/Admin/CreateStudent.cshtml - NO enrollment date, NO degree, NO track *@
+@model ThesisManager.ViewModels.CreateStudentViewModel
+@{
+    ViewData["Title"] = "إضافة طالب جديد";
+    Layout = "_Layout";
+}
+
+<div class="content-container" style="max-width: 800px;">
+    <h2 style="color: var(--primary-blue); margin-bottom: 2rem;">
+        <i class="fas fa-user-plus"></i>
+        إضافة طالب جديد
+    </h2>
+
+    <form method="post" asp-action="CreateStudent">
+        <div class="form-group">
+            <label asp-for="FullName">اسم الطالب الكامل</label>
+            <input class="form-control" asp-for="FullName" required />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="StudentId">الرقم الجامعي</label>
+            <input class="form-control" asp-for="StudentId" required />
+            <span asp-validation-for="StudentId" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ResidencyId">رقم الإقامة</label>
+            <input class="form-control" asp-for="ResidencyId" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Phone">الهاتف</label>
+            <input class="form-control" asp-for="Phone" type="tel" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Email">البريد الإلكتروني</label>
+            <input class="form-control" asp-for="Email" type="email" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="TutorId">المرشد الأكاديمي</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <select class="form-select" asp-for="TutorId" id="tutorSelect" style="flex: 1;">
+                    <option value="">اختر المرشد الأكاديمي</option>
+                    @foreach(var tutor in ViewBag.Tutors)
+                    {
+                        <option value="@tutor.Id">@tutor.FullName</option>
+                    }
+                </select>
+                <button type="button" class="btn btn-info" onclick="showAddTutorModal()" style="min-width: 50px;">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                <i class="fas fa-save"></i>
+                حفظ
+            </button>
+            <a href="@Url.Action("Students", "Admin")" class="btn btn-secondary" style="flex: 1;">
+                <i class="fas fa-times"></i>
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Add Tutor Modal -->
+<div class="modal-overlay" id="addTutorModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>إضافة مرشد أكاديمي جديد</h3>
+            <button class="close-modal" onclick="closeModal('addTutorModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="form-group">
+            <label>الاسم الكامل</label>
+            <input type="text" id="tutorFullName" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <label>البريد الإلكتروني</label>
+            <input type="email" id="tutorEmail" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <label>الهاتف</label>
+            <input type="tel" id="tutorPhone" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>كلمة المرور</label>
+            <input type="password" id="tutorPassword" class="form-control" required />
+        </div>
+        <button type="button" class="btn btn-success" onclick="addTutor()" style="width: 100%;">
+            <i class="fas fa-save"></i>
+            حفظ
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function showAddTutorModal() {
+            document.getElementById('addTutorModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        async function addTutor() {
+            const data = {
+                fullName: document.getElementById('tutorFullName').value,
+                email: document.getElementById('tutorEmail').value,
+                phone: document.getElementById('tutorPhone').value,
+                password: document.getElementById('tutorPassword').value
+            };
+
+            if (!data.fullName || !data.email || !data.password) {
+                alert('الرجاء ملء جميع الحقول المطلوبة');
+                return;
+            }
+
+            try {
+                const response = await fetch('@Url.Action("AddTutor", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Add to dropdown
+                    const select = document.getElementById('tutorSelect');
+                    const option = new Option(result.fullName, result.id, true, true);
+                    select.add(option);
+                    
+                    // Close modal and clear inputs
+                    closeModal('addTutorModal');
+                    document.getElementById('tutorFullName').value = '';
+                    document.getElementById('tutorEmail').value = '';
+                    document.getElementById('tutorPhone').value = '';
+                    document.getElementById('tutorPassword').value = '';
+                    
+                    alert('تمت إضافة المرشد الأكاديمي بنجاح');
+                } else {
+                    alert('حدث خطأ أثناء الإضافة');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الاتصال بالخادم');
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('addTutorModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal('addTutorModal');
+            }
+        });
+    </script>
+}

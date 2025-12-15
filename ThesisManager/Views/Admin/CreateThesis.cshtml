@@ -1,0 +1,165 @@
+@* Views/Admin/CreateThesis.cshtml - Add ONLY completed thesis *@
+@model ThesisManager.ViewModels.CreateThesisViewModel
+@{
+    ViewData["Title"] = "إضافة رسالة منتهية";
+    Layout = "_Layout";
+}
+
+<div class="content-container" style="max-width: 900px;">
+    <h2 style="color: var(--primary-blue); margin-bottom: 2rem;">
+        <i class="fas fa-book"></i>
+        إضافة رسالة منتهية (خريج)
+    </h2>
+
+    <form method="post" asp-action="CreateThesis">
+        <!-- Student Information -->
+        <div class="info-card">
+            <h3>معلومات الطالب</h3>
+            
+            <div class="form-group">
+                <label asp-for="StudentName">اسم الطالب</label>
+                <input class="form-control" asp-for="StudentName" required />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="StudentId">الرقم الجامعي</label>
+                        <input class="form-control" asp-for="StudentId" required />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="ResidencyId">رقم الإقامة</label>
+                        <input class="form-control" asp-for="ResidencyId" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Phone">الهاتف</label>
+                        <input class="form-control" asp-for="Phone" type="tel" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Email">البريد الإلكتروني</label>
+                        <input class="form-control" asp-for="Email" type="email" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thesis Information -->
+        <div class="info-card">
+            <h3>معلومات الرسالة</h3>
+            
+            <div class="form-group">
+                <label asp-for="TitleAr">عنوان الرسالة (عربي)</label>
+                <input class="form-control" asp-for="TitleAr" required />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TitleEn">عنوان الرسالة (إنجليزي)</label>
+                <input class="form-control" asp-for="TitleEn" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="DegreeType">المرحلة</label>
+                        <select class="form-select" asp-for="DegreeType" required>
+                            <option value="master">ماجستير</option>
+                            <option value="doctorate">دكتوراه</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="TrackId">المسار</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <select class="form-select" asp-for="TrackId" id="trackSelect" style="flex: 1;">
+                                <option value="">اختر المسار</option>
+                                @foreach(var track in ViewBag.Tracks)
+                                {
+                                    <option value="@track.Id">@track.Name</option>
+                                }
+                                <option value="0" style="color: var(--primary-blue); font-weight: bold;">+ إضافة مسار جديد</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden field for new track -->
+            <div class="form-group" id="newTrackGroup" style="display: none;">
+                <label asp-for="NewTrackName">اسم المسار الجديد</label>
+                <input class="form-control" asp-for="NewTrackName" id="newTrackInput" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="SupervisorId">المشرف</label>
+                        <select class="form-select" asp-for="SupervisorId">
+                            <option value="">اختر المشرف</option>
+                            @foreach(var sup in ViewBag.Supervisors)
+                            {
+                                <option value="@sup.Id">@sup.FullName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="DefenseDate">تاريخ المناقشة (اختياري)</label>
+                        <input class="form-control" asp-for="DefenseDate" type="date" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="AbstractAr">ملخص الرسالة (عربي)</label>
+                <textarea class="form-control" asp-for="AbstractAr" rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="AbstractEn">ملخص الرسالة (إنجليزي)</label>
+                <textarea class="form-control" asp-for="AbstractEn" rows="4"></textarea>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                <i class="fas fa-save"></i>
+                حفظ الرسالة
+            </button>
+            <a href="@Url.Action("Students", "Admin")" class="btn btn-secondary" style="flex: 1;">
+                <i class="fas fa-times"></i>
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Show/hide new track input
+        document.getElementById('trackSelect').addEventListener('change', function() {
+            const newTrackGroup = document.getElementById('newTrackGroup');
+            const newTrackInput = document.getElementById('newTrackInput');
+            
+            if (this.value === '0') {
+                newTrackGroup.style.display = 'block';
+                newTrackInput.required = true;
+                this.value = ''; // Clear selection
+            } else {
+                newTrackGroup.style.display = 'none';
+                newTrackInput.required = false;
+                newTrackInput.value = '';
+            }
+        });
+    </script>
+}

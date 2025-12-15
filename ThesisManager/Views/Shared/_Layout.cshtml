@@ -3,17 +3,19 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>مدير الأطروحة</title>
+    <title>@ViewData["Title"] - مدير الأطروحة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         :root {
-            --primary-blue: #1e40af;
+            --primary-blue: #2563eb;
+            --dark-blue: #1e40af;
             --light-blue: #3b82f6;
             --lighter-blue: #60a5fa;
             --lightest-blue: #dbeafe;
-            --dark-blue: #1e3a8a;
-            --accent-blue: #0ea5e9;
-            --bg-gradient: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%);
+            --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --danger-red: #ef4444;
         }
 
         * {
@@ -23,254 +25,626 @@
         body {
             direction: rtl;
             text-align: right;
-            background: var(--bg-gradient);
+            background: linear-gradient(135deg, #dbeafe 0%, #f8fafc 100%);
             min-height: 100vh;
         }
 
-        /* Header styling */
-        .header-section {
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+        /* ===== HEADER ===== */
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
             color: white;
-            padding: 2rem 0;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
-            margin-bottom: 2rem;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        .header-section h1 {
-            font-size: 2.5rem;
+        .main-header h1 {
+            font-size: 2rem;
             font-weight: bold;
             margin: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            display: inline-block;
         }
 
-        /* Container styling */
-        .container {
+        .main-header h1 a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .main-header h1 a:hover {
+            color: var(--lightest-blue);
+        }
+
+        .header-actions {
+            float: left;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-login, .btn-admin {
+            background: white;
+            color: var(--primary-blue);
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-login:hover, .btn-admin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .user-info {
+            color: white;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: background 0.3s;
+        }
+
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-info i {
+            margin-left: 0.5rem;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 0.4rem 1.2rem;
+            border-radius: 20px;
+            margin-right: 1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-logout:hover {
+            background: white;
+            color: var(--primary-blue);
+        }
+
+        /* Rest of your existing styles... */
+        .content-container {
             background: white;
             border-radius: 15px;
             padding: 2rem;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.1);
-            margin-bottom: 2rem;
+            margin: 2rem auto;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+            max-width: 1400px;
         }
 
-        /* Big buttons with blue theme */
-        .big-btn {
-            width: 220px;
-            height: 80px;
+        .search-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, white 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border: 2px solid var(--lightest-blue);
+        }
+
+        .search-section h2 {
+            color: var(--primary-blue);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .search-tabs {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            background: white;
+            color: var(--primary-blue);
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: 2px solid var(--primary-blue);
+        }
+
+        .tab-btn.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1.5rem;
+            border: 2px solid var(--light-blue);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--light-blue);
             font-size: 1.2rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .big-btn {
+            padding: 1.2rem 2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             border-radius: 12px;
-            transition: all 0.3s ease;
             border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 200px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
-            border: none;
+            color: white;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 100%);
             transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(30, 64, 175, 0.3);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-            border: none;
+            background: linear-gradient(135deg, #059669 0%, var(--success-green) 100%);
+            color: white;
         }
 
         .btn-success:hover {
-            background: linear-gradient(135deg, #047857 0%, #059669 100%);
             transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(5, 150, 105, 0.3);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
 
         .btn-info {
-            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--lighter-blue) 100%);
-            border: none;
+            background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
             color: white;
         }
 
         .btn-info:hover {
-            background: linear-gradient(135deg, #0284c7 0%, var(--accent-blue) 100%);
             transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(14, 165, 233, 0.3);
+            box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
-            border: none;
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+            color: white;
         }
 
         .btn-secondary:hover {
-            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
         }
 
         .btn-warning {
             background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-            border: none;
             color: white;
         }
 
         .btn-warning:hover {
-            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
         }
 
-        /* Table styling */
-        .table {
-            border-radius: 10px;
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.08);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
         }
 
-        .table thead {
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+        .data-table thead {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
             color: white;
         }
 
-        .table thead th {
+        .data-table thead th {
             padding: 1rem;
             font-weight: bold;
+            text-align: right;
             border: none;
         }
 
-        .table thead th a {
+        .data-table thead th a {
             color: white;
             text-decoration: none;
-            transition: color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
-        .table thead th a:hover {
+        .data-table thead th a:hover {
             color: var(--lightest-blue);
-            text-decoration: underline;
         }
 
-        .table-striped tbody tr:nth-of-type(odd) {
-            background-color: rgba(219, 234, 254, 0.3);
+        .data-table tbody tr {
+            background: white;
+            border-bottom: 1px solid var(--lightest-blue);
+            transition: all 0.2s;
         }
 
-        .table tbody td {
+        .data-table tbody tr:nth-child(even) {
+            background: rgba(219, 234, 254, 0.3);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--lightest-blue);
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+            cursor: pointer;
+        }
+
+        .data-table tbody td {
             padding: 1rem;
+            text-align: right;
             vertical-align: middle;
         }
 
-        tr.clickable {
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
         }
 
-        tr.clickable:hover {
-            background-color: var(--lightest-blue) !important;
-            transform: scale(1.01);
-            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.15);
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
         }
 
-        /* Form styling */
-        .form-control,
-        .form-select {
-            border: 2px solid var(--lightest-blue);
-            border-radius: 8px;
-            padding: 0.75rem;
-            transition: border-color 0.3s;
-            text-align: right;
+        .status-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-due-soon {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-graduated {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 3rem 0;
             direction: rtl;
         }
 
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--light-blue);
-            box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
         }
 
-        label {
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
             font-weight: bold;
-            color: var(--primary-blue);
-            margin-bottom: 0.5rem;
-            display: block;
+            font-size: 1.2rem;
+            border: 4px solid #e5e7eb;
+            transition: all 0.3s;
         }
 
-        h2, h3 {
+        .step.completed .step-number {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .step.current .step-number {
+            background: var(--warning-orange);
+            color: white;
+            border-color: var(--warning-orange);
+            animation: pulse 2s infinite;
+        }
+
+        .step.pending .step-number {
+            background: white;
+            border-color: #d1d5db;
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        .step.completed .step-label {
             color: var(--primary-blue);
             font-weight: bold;
+        }
+
+        .step.current .step-label {
+            color: var(--warning-orange);
+            font-weight: bold;
+        }
+
+        .step-connector {
+            flex: 1;
+            height: 4px;
+            background: #e5e7eb;
+            margin: 0 -10px;
+            margin-top: -30px;
+        }
+
+        .step.completed + .step-connector {
+            background: var(--primary-blue);
+        }
+
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .form-group {
             margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 3px solid var(--lightest-blue);
         }
 
-        /* Card styling for details pages */
+        .form-group label {
+            display: block;
+            color: var(--primary-blue);
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--lightest-blue);
+            border-radius: 8px;
+            font-size: 1rem;
+            direction: rtl;
+            text-align: right;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--light-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            direction: rtl;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            color: var(--primary-blue);
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
         .info-card {
             background: linear-gradient(135deg, var(--lightest-blue) 0%, white 100%);
-            border-right: 5px solid var(--light-blue);
+            border-right: 5px solid var(--primary-blue);
             border-radius: 10px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
 
-        .info-card strong {
+        .info-card h3 {
             color: var(--primary-blue);
+            margin-bottom: 1rem;
         }
 
-        /* Responsive adjustments */
+        .info-row {
+            display: flex;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--lightest-blue);
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: var(--primary-blue);
+            min-width: 150px;
+        }
+
+        .info-value {
+            color: #374151;
+        }
+
         @@media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+            }
+            
             .big-btn {
                 width: 100%;
-                margin-bottom: 1rem;
             }
 
-            .header-section h1 {
-                font-size: 1.8rem;
+            .progress-steps {
+                flex-direction: column;
+            }
+
+            .step-connector {
+                display: none;
+            }
+
+            .data-table {
+                font-size: 0.9rem;
             }
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--lightest-blue);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--light-blue);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-blue);
-        }
-
-        /* Text alignment for inputs */
-        input[type="text"],
-        input[type="date"],
-        input[type="email"],
-        textarea,
-        select {
-            direction: rtl;
-            text-align: right;
-        }
-
-        /* Numbers should be LTR even in RTL layout */
-        input[type="number"] {
-            direction: ltr;
-            text-align: left;
-        }
+        .text-center { text-align: center; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .mb-4 { margin-bottom: 2rem; }
+        .mt-4 { margin-top: 2rem; }
     </style>
 </head>
 <body>
-    <div class="header-section">
+    <!-- Header -->
+    <div class="main-header">
         <div class="container-fluid px-4">
-            <h1>📚 مدير الأطروحة</h1>
+            <h1>
+                <a href="@Url.Action("Index", "Home")">
+                    <i class="fas fa-graduation-cap"></i>
+                    مدير الأطروحة
+                </a>
+            </h1>
+            <div class="header-actions">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a href="@Url.Action("Students", "Admin")" class="user-info">
+                        <i class="fas fa-user"></i>
+                        @User.Identity.Name
+                    </a>
+                    <button class="btn-logout" onclick="location.href='@Url.Action("Logout", "Account")'">
+                        <i class="fas fa-sign-out-alt"></i>
+                        تسجيل الخروج
+                    </button>
+                }
+                else
+                {
+                    <button class="btn-login" onclick="showLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        تسجيل الدخول
+                    </button>
+                }
+            </div>
+            <div style="clear: both;"></div>
         </div>
     </div>
 
-    <div class="container">
+    <!-- Main Content -->
+    <div class="container-fluid px-4">
         @RenderBody()
     </div>
 
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تسجيل الدخول</h3>
+                <button class="close-modal" onclick="closeLoginModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" action="@Url.Action("Login", "Account")">
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" name="email" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <input type="password" name="password" class="form-control" required />
+                </div>
+                <button type="submit" class="big-btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    دخول
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLoginModal();
+            }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

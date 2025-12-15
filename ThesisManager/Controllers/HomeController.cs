@@ -1,35 +1,54 @@
+// Controllers/HomeController.cs - UPDATED with two sections
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ThesisManager.Data;
-using ThesisManager.Models;
+using ThesisManager.ViewModels;
 
 namespace ThesisManager.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _db;
-        public HomeController(ApplicationDbContext db) => _db = db;
 
-        public async Task<IActionResult> Index(string sortBy = "deadline", bool asc = true)
+        public HomeController(ApplicationDbContext db)
         {
-            var q = _db.Students
-                .Include(s => s.NumOfStep)
-                .AsQueryable();
+            _db = db;
+        }
 
-            // default sort by deadline
-            q = sortBy switch
-            {
-                "name" => asc ? q.OrderBy(s => s.Name) : q.OrderByDescending(s => s.Name),
-                "s_id" => asc ? q.OrderBy(s => s.S_Id) : q.OrderByDescending(s => s.S_Id),
-                "iqaamah_id" => asc ? q.OrderBy(s => s.Iqaamah_Id) : q.OrderByDescending(s => s.Iqaamah_Id),
-                "deadline" => asc ? q.OrderBy(s => s.Deadline) : q.OrderByDescending(s => s.Deadline),
-                _ => asc ? q.OrderBy(s => s.Deadline) : q.OrderByDescending(s => s.Deadline),
-            };
+        // Public front page - showing theses in two sections
+        public async Task<IActionResult> Index(string filter = "all")
+        {
+            var currentYear = DateTime.Now.Year;
 
-            var students = await q.ToListAsync();
-            ViewBag.SortBy = sortBy;
-            ViewBag.Asc = asc;
-            return View(students);
+            var query = _db.Students
+                .Where(s => s.Status == "graduated")
+                .Include(s => s.Supervisor)
+                .Include(s => s.Thesis)
+                    .ThenInclude(t => t!.Track)
+                .Select(s => new PublicThesisViewModel
+                {
+                    StudentName = s.FullName,
+                    StudentId = s.StudentId,
+                    DegreeType = s.Thesis!.DegreeType,
+                    TrackName = s.Thesis.Track != null ? s.Thesis.Track.Name : null,
+                    TitleAr = s.Thesis.TitleAr,
+                    TitleEn = s.Thesis.TitleEn,
+                    AbstractAr = s.Thesis.AbstractAr,
+                    SupervisorName = s.Supervisor != null ? s.Supervisor.FullName : null,
+                    DefenseDate = s.Thesis.DefenseDate,
+                    GraduationDate = s.ActualGraduationDate,
+                    GraduationYear = s.ActualGraduationDate.HasValue ? s.ActualGraduationDate.Value.Year : null
+                })
+                .OrderByDescending(t => t.GraduationDate);
+
+            var theses = await query.ToListAsync();
+
+            // Split into two lists
+            ViewBag.CurrentYearTheses = theses.Where(t => t.GraduationYear == currentYear).ToList();
+            ViewBag.AllTheses = theses.ToList();
+            ViewBag.Filter = filter;
+
+            return View(theses);
         }
     }
 }

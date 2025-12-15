@@ -1,0 +1,192 @@
+@* Views/Admin/Students.cshtml - UPDATED with new buttons *@
+@model IEnumerable<ThesisManager.ViewModels.StudentProgressViewModel>
+@{
+    ViewData["Title"] = "قائمة الطلاب";
+    Layout = "_Layout";
+    var userRole = ViewBag.UserRole as string;
+}
+
+<div class="content-container">
+    <!-- Action Buttons (Admin Only) -->
+    @if(userRole == "admin")
+    {
+        <div class="action-buttons">
+            <button class="big-btn btn-primary" onclick="location.href='@Url.Action("CreateStudent", "Admin")'">
+                <i class="fas fa-user-plus"></i>
+                إضافة طالب
+            </button>
+            <button class="big-btn btn-success" onclick="location.href='@Url.Action("CreateThesis", "Admin")'">
+                <i class="fas fa-book"></i>
+                إضافة رسالة منتهية
+            </button>
+            <button class="big-btn btn-info" onclick="location.href='@Url.Action("Users", "Admin")'">
+                <i class="fas fa-users"></i>
+                المشرفون والمرشدون
+            </button>
+            <button class="big-btn btn-warning" onclick="location.href='@Url.Action("ManageSteps", "Admin")'">
+                <i class="fas fa-tasks"></i>
+                إدارة الخطوات
+            </button>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="big-btn btn-success" onclick="location.href='@Url.Action("CreateSupervisor", "Admin")'">
+                <i class="fas fa-user-tie"></i>
+                إضافة مشرف
+            </button>
+            <button class="big-btn btn-info" onclick="location.href='@Url.Action("CreateTutor", "Admin")'">
+                <i class="fas fa-chalkboard-teacher"></i>
+                إضافة مرشد أكاديمي
+            </button>
+            <button class="big-btn btn-primary" onclick="location.href='@Url.Action("CreateAdmin", "Admin")'">
+                <i class="fas fa-user-shield"></i>
+                إضافة مسؤول
+            </button>
+        </div>
+    }
+
+    <!-- Page Title -->
+    <h2 style="color: var(--primary-blue); margin-bottom: 1.5rem;">
+        <i class="fas fa-users"></i>
+        قائمة الطلاب الحاليين
+    </h2>
+
+    <!-- Filter and Search -->
+    <div class="mb-3" style="display: flex; gap: 1rem; align-items: center;">
+        <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="ابحث عن طالب..."
+            class="form-control"
+            style="max-width: 400px;"
+            onkeyup="searchStudents()"
+        />
+        <select class="form-select" style="max-width: 200px;" onchange="filterByStatus(this.value)">
+            <option value="all">جميع الحالات</option>
+            <option value="on_track">في الموعد</option>
+            <option value="due_soon">قريب من الموعد</option>
+            <option value="overdue">متأخر</option>
+        </select>
+    </div>
+
+    <!-- Students Table -->
+    <table class="data-table" id="studentsTable">
+        <thead>
+            <tr>
+                <th>
+                    <a href="@Url.Action("Students", new { sortBy = "name" })">
+                        اسم الطالب <i class="fas fa-sort"></i>
+                    </a>
+                </th>
+                <th>
+                    <a href="@Url.Action("Students", new { sortBy = "student_id" })">
+                        الرقم الجامعي <i class="fas fa-sort"></i>
+                    </a>
+                </th>
+                <th>رقم الإقامة</th>
+                <th>الهاتف</th>
+                <th>البريد الإلكتروني</th>
+                <th>المرحلة</th>
+                <th>المسار</th>
+                <th>الخطوة الحالية</th>
+                <th>
+                    <a href="@Url.Action("Students", new { sortBy = "deadline" })">
+                        تاريخ الإنجاز <i class="fas fa-sort"></i>
+                    </a>
+                </th>
+                <th>الحالة</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var student in Model)
+            {
+                <tr class="student-row clickable" 
+                    onclick="location.href='@Url.Action("StudentDetails", "Admin", new { id = student.Id })'"
+                    data-status="@student.DeadlineStatus"
+                    data-search="@student.FullName @student.StudentId">
+                    <td>@student.FullName</td>
+                    <td>@student.StudentId</td>
+                    <td>@student.ResidencyId</td>
+                    <td>@student.Phone</td>
+                    <td>@student.Email</td>
+                    <td>
+                        @if(student.DegreeType == "master")
+                        {
+                            <span class="status-badge" style="background: #dbeafe; color: #1e40af;">ماجستير</span>
+                        }
+                        else if(student.DegreeType == "doctorate")
+                        {
+                            <span class="status-badge" style="background: #fef3c7; color: #92400e;">دكتوراه</span>
+                        }
+                        else
+                        {
+                            <span style="color: #9ca3af;">—</span>
+                        }
+                    </td>
+                    <td>@(student.TrackName ?? "—")</td>
+                    <td style="font-weight: bold;">
+                        خطوة @student.CurrentStep: @student.StepNameAr
+                    </td>
+                    <td>@student.CurrentDeadline?.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if(student.DeadlineStatus == "on_track")
+                        {
+                            <span class="status-badge status-active">
+                                <i class="fas fa-check-circle"></i> في الموعد
+                            </span>
+                        }
+                        else if(student.DeadlineStatus == "due_soon")
+                        {
+                            <span class="status-badge status-due-soon">
+                                <i class="fas fa-exclamation-triangle"></i> قريب
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-overdue">
+                                <i class="fas fa-times-circle"></i> متأخر
+                            </span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if(!Model.Any())
+    {
+        <div class="text-center mt-4" style="padding: 3rem; color: #6b7280;">
+            <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; color: var(--lightest-blue);"></i>
+            <p style="font-size: 1.2rem;">لا يوجد طلاب حالياً</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        let allRows = document.querySelectorAll('.student-row');
+
+        function filterByStatus(status) {
+            allRows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function searchStudents() {
+            let searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            allRows.forEach(row => {
+                let searchData = row.dataset.search.toLowerCase();
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+}

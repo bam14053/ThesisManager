@@ -1,0 +1,172 @@
+@* Views/Admin/UserDetails.cshtml *@
+@model ThesisManager.ViewModels.UserDetailsViewModel
+@{
+    ViewData["Title"] = "تفاصيل المستخدم";
+    Layout = "_Layout";
+}
+
+<div class="content-container">
+    <a href="@Url.Action("Users", "Admin")" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-right"></i> العودة للقائمة
+    </a>
+
+    <!-- User Info Card -->
+    <div class="info-card">
+        <h3>
+            <i class="fas fa-user"></i>
+            معلومات المستخدم
+        </h3>
+        
+        <form method="post" asp-action="EditUser" asp-route-id="@Model.Id">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>الاسم الكامل</label>
+                        <input class="form-control" name="fullName" value="@Model.FullName" required />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>البريد الإلكتروني</label>
+                        <input class="form-control" name="email" type="email" value="@Model.Email" required />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>الهاتف</label>
+                        <input class="form-control" name="phone" value="@Model.Phone" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>الدور</label>
+                        <input class="form-control" value="@(Model.Role == "supervisor" ? "مشرف" : "مرشد أكاديمي")" readonly />
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">الحالة:</span>
+                <span class="info-value">
+                    @if(Model.IsActive)
+                    {
+                        <span class="status-badge status-active">نشط</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge status-overdue">غير نشط</span>
+                    }
+                </span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">تاريخ الإضافة:</span>
+                <span class="info-value">@Model.CreatedAt.ToString("yyyy-MM-dd")</span>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    حفظ التعديلات
+                </button>
+                <button type="button" class="btn btn-warning" onclick="showResetPasswordModal()">
+                    <i class="fas fa-key"></i>
+                    إعادة تعيين كلمة المرور
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Students List -->
+    <h3 style="color: var(--primary-blue); margin: 2rem 0 1rem;">
+        <i class="fas fa-users"></i>
+        الطلاب المسجلون (@Model.Students.Count)
+    </h3>
+
+    @if(Model.Students.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>اسم الطالب</th>
+                    <th>الرقم الجامعي</th>
+                    <th>المرحلة</th>
+                    <th>المسار</th>
+                    <th>الخطوة الحالية</th>
+                    <th>الموعد النهائي</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var student in Model.Students)
+                {
+                    <tr class="clickable" onclick="location.href='@Url.Action("StudentDetails", "Admin", new { id = student.Id })'">
+                        <td style="font-weight: bold;">@student.FullName</td>
+                        <td>@student.StudentId</td>
+                        <td>
+                            @if(student.DegreeType == "master")
+                            {
+                                <span class="status-badge" style="background: #dbeafe; color: #1e40af;">ماجستير</span>
+                            }
+                            else if(student.DegreeType == "doctorate")
+                            {
+                                <span class="status-badge" style="background: #fef3c7; color: #92400e;">دكتوراه</span>
+                            }
+                        </td>
+                        <td>@student.TrackName</td>
+                        <td>خطوة @student.CurrentStep</td>
+                        <td>@student.CurrentDeadline?.ToString("yyyy-MM-dd")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="text-center" style="padding: 2rem; color: #6b7280;">
+            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--lightest-blue);"></i>
+            <p>لا يوجد طلاب مسجلون</p>
+        </div>
+    }
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="resetPasswordModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>إعادة تعيين كلمة المرور</h3>
+            <button class="close-modal" onclick="closeModal('resetPasswordModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <p style="margin-bottom: 1.5rem; color: #6b7280;">
+            سيُطلب من المستخدم تغيير كلمة المرور عند تسجيل الدخول التالي
+        </p>
+        <form method="post" asp-action="ResetUserPassword" asp-route-id="@Model.Id">
+            <button type="submit" class="btn btn-warning" style="width: 100%;">
+                <i class="fas fa-key"></i>
+                تأكيد إعادة التعيين
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showResetPasswordModal() {
+            document.getElementById('resetPasswordModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.getElementById('resetPasswordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal('resetPasswordModal');
+            }
+        });
+    </script>
+}

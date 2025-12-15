@@ -1,41 +1,217 @@
-﻿@model IEnumerable<ThesisManager.Models.Student>
+﻿@* Views/Home/Index.cshtml - PUBLIC FRONT PAGE with TWO SECTIONS *@
+@model IEnumerable<ThesisManager.ViewModels.PublicThesisViewModel>
 @{
+    ViewData["Title"] = "عناوين موضوعات رسائل الماجستير والدكتوراه";
     Layout = "_Layout";
-    var sortBy = ViewBag.SortBy as string ?? "deadline";
-    var asc = (bool)(ViewBag.Asc ?? true);
-    Func<string, string> sortUrl = key => Url.Action("Index", "Home", new { sortBy = key, asc = (sortBy == key ? !asc : true) });
+    var currentYearTheses = ViewBag.CurrentYearTheses as List<ThesisManager.ViewModels.PublicThesisViewModel>;
+    var allTheses = ViewBag.AllTheses as List<ThesisManager.ViewModels.PublicThesisViewModel>;
+    var filter = ViewBag.Filter as string ?? "current";
 }
 
-<div class="text-center mb-4">
-    <a class="btn btn-primary big-btn me-3" href="@Url.Action("Create","Students")">إضافة طالب</a>
-    <a class="btn btn-success big-btn me-3" href="@Url.Action("Create","Supervisors")">إضافة مشرف</a>
-    <a class="btn btn-info big-btn" href="@Url.Action("Create","StudentGuides")">إضافة مرشد أكاديمي</a>
+<div class="content-container">
+    <!-- Search Section -->
+    <div class="search-section">
+        <h2>عناوين موضوعات رسائل الماجستير والدكتوراه</h2>
+        <p class="text-center" style="color: #6b7280; margin-bottom: 1.5rem;">
+            المسجلة في قسم السنة وعلومها بجامعة القصيم
+        </p>
+
+        <!-- TWO SECTION TABS -->
+        <div class="search-tabs">
+            <button class="tab-btn @(filter == "current" ? "active" : "")" onclick="showSection('current')">
+                <i class="fas fa-calendar-check"></i>
+                الموضوعات المسجلة خلال عام @DateTime.Now.Year هـ
+            </button>
+            <button class="tab-btn @(filter == "all" ? "active" : "")" onclick="showSection('all')">
+                <i class="fas fa-list"></i>
+                الموضوعات المسجلة قبل عام @DateTime.Now.Year هـ
+            </button>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="ابحث عن طالب، عنوان، مشرف، أو مسار..."
+                onkeyup="searchTheses()"
+            />
+            <i class="fas fa-search"></i>
+        </div>
+    </div>
+
+    <!-- CURRENT YEAR SECTION -->
+    <div id="currentYearSection" style="@(filter == "current" ? "" : "display: none;")">
+        <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">
+            <i class="fas fa-calendar-alt"></i>
+            الرسائل المسجلة خلال عام @DateTime.Now.Year
+        </h3>
+        
+        <div class="mb-3" style="color: #6b7280;">
+            <span id="currentYearCount">@currentYearTheses.Count</span> رسالة
+        </div>
+
+        <table class="data-table" id="currentYearTable">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">ت</th>
+                    <th>اسم الطالب</th>
+                    <th>المرحلة</th>
+                    <th>المسار</th>
+                    <th>المشرف</th>
+                    <th>عنوان الرسالة</th>
+                    <th style="width: 120px;">تاريخ المناقشة</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{int counter1 = 1;}
+                @foreach(var thesis in currentYearTheses)
+                {
+                    <tr class="thesis-row current-year-row" 
+                        data-search="@thesis.StudentName @thesis.TitleAr @thesis.SupervisorName @thesis.TrackName">
+                        <td>@counter1</td>
+                        <td>@thesis.StudentName</td>
+                        <td>
+                            @if(thesis.DegreeType == "master")
+                            {
+                                <span class="status-badge" style="background: #dbeafe; color: #1e40af;">ماجستير</span>
+                            }
+                            else
+                            {
+                                <span class="status-badge" style="background: #fef3c7; color: #92400e;">دكتوراه</span>
+                            }
+                        </td>
+                        <td>@thesis.TrackName</td>
+                        <td>@thesis.SupervisorName</td>
+                        <td style="font-weight: bold; color: var(--primary-blue);">@thesis.TitleAr</td>
+                        <td>@(thesis.DefenseDate?.ToString("yyyy-MM-dd") ?? "—")</td>
+                    </tr>
+                    counter1++;
+                }
+            </tbody>
+        </table>
+
+        @if(!currentYearTheses.Any())
+        {
+            <div class="text-center mt-4" style="padding: 3rem; color: #6b7280;">
+                <i class="fas fa-calendar" style="font-size: 3rem; margin-bottom: 1rem; color: var(--lightest-blue);"></i>
+                <p style="font-size: 1.2rem;">لا توجد رسائل مسجلة في العام الحالي</p>
+            </div>
+        }
+    </div>
+
+    <!-- ALL PREVIOUS THESES SECTION -->
+    <div id="allThesesSection" style="@(filter == "all" ? "" : "display: none;")">
+        <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">
+            <i class="fas fa-archive"></i>
+            جميع الرسائل المسجلة قبل عام @DateTime.Now.Year
+        </h3>
+        
+        <div class="mb-3" style="color: #6b7280;">
+            <span id="allThesesCount">@allTheses.Where(t => t.GraduationYear != DateTime.Now.Year).Count()</span> رسالة
+        </div>
+
+        <table class="data-table" id="allThesesTable">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">ت</th>
+                    <th>اسم الطالب</th>
+                    <th>المرحلة</th>
+                    <th>المسار</th>
+                    <th>المشرف</th>
+                    <th>عنوان الرسالة</th>
+                    <th style="width: 120px;">تاريخ المناقشة</th>
+                    <th style="width: 80px;">السنة</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{int counter2 = 1;}
+                @foreach(var thesis in allTheses.Where(t => t.GraduationYear != DateTime.Now.Year))
+                {
+                    <tr class="thesis-row all-theses-row" 
+                        data-search="@thesis.StudentName @thesis.TitleAr @thesis.SupervisorName @thesis.TrackName">
+                        <td>@counter2</td>
+                        <td>@thesis.StudentName</td>
+                        <td>
+                            @if(thesis.DegreeType == "master")
+                            {
+                                <span class="status-badge" style="background: #dbeafe; color: #1e40af;">ماجستير</span>
+                            }
+                            else
+                            {
+                                <span class="status-badge" style="background: #fef3c7; color: #92400e;">دكتوراه</span>
+                            }
+                        </td>
+                        <td>@thesis.TrackName</td>
+                        <td>@thesis.SupervisorName</td>
+                        <td style="font-weight: bold; color: var(--primary-blue);">@thesis.TitleAr</td>
+                        <td>@(thesis.DefenseDate?.ToString("yyyy-MM-dd") ?? "—")</td>
+                        <td>@thesis.GraduationYear</td>
+                    </tr>
+                    counter2++;
+                }
+            </tbody>
+        </table>
+
+        @if(!allTheses.Where(t => t.GraduationYear != DateTime.Now.Year).Any())
+        {
+            <div class="text-center mt-4" style="padding: 3rem; color: #6b7280;">
+                <i class="fas fa-book" style="font-size: 3rem; margin-bottom: 1rem; color: var(--lightest-blue);"></i>
+                <p style="font-size: 1.2rem;">لا توجد رسائل سابقة</p>
+            </div>
+        }
+    </div>
 </div>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th><a href="@sortUrl("name")">اسم الطالب</a></th>
-            <th><a href="@sortUrl("s_id")">الرقم الجامعي</a></th>
-            <th><a href="@sortUrl("iqaamah_id")">رقم الهوية</a></th>
-            <th>الهاتف</th>
-            <th>البريد الاكتروني</th>
-            <th><a href="@sortUrl("deadline")">تاريخ لإنجاز</a></th>
-            <th>خطوة</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach(var s in Model)
-    {
-        <tr class="clickable" onclick="location.href='@Url.Action("Details","Students", new { id = s.Id })'">
-            <td>@s.Name</td>
-            <td>@s.S_Id</td>
-            <td>@s.Iqaamah_Id</td>
-            <td>@s.Tel</td>
-            <td>@s.Email</td>
-            <td>@s.Deadline.ToString("yyyy-MM-dd")</td>
-            <td>@(s.NumOfStep?.Name ?? "—")</td>
-        </tr>
-    }
-    </tbody>
-</table>
+@section Scripts {
+    <script>
+        let currentSection = '@filter';
+
+        function showSection(section) {
+            // Hide both sections
+            document.getElementById('currentYearSection').style.display = 'none';
+            document.getElementById('allThesesSection').style.display = 'none';
+
+            // Show selected section
+            if (section === 'current') {
+                document.getElementById('currentYearSection').style.display = 'block';
+            } else {
+                document.getElementById('allThesesSection').style.display = 'block';
+            }
+
+            // Update tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            currentSection = section;
+        }
+
+        function searchTheses() {
+            let searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            // Search in current section only
+            if (currentSection === 'current') {
+                searchInTable('.current-year-row', 'currentYearCount');
+            } else {
+                searchInTable('.all-theses-row', 'allThesesCount');
+            }
+
+            function searchInTable(rowClass, countId) {
+                let rows = document.querySelectorAll(rowClass);
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    let searchData = row.dataset.search.toLowerCase();
+                    if (searchData.includes(searchTerm)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                document.getElementById(countId).textContent = visibleCount;
+            }
+        }
+    </script>
+}

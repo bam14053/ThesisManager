@@ -1,0 +1,344 @@
+@* Views/Admin/StudentDetails.cshtml - STUDENT DETAILS WITH 12-STEP PROGRESS *@
+@model ThesisManager.ViewModels.StudentDetailsViewModel
+@{
+    ViewData["Title"] = "تفاصيل الطالب";
+    Layout = "_Layout";
+    var isReadOnly = (bool)(ViewBag.IsReadOnly ?? false);
+}
+
+<div class="content-container">
+    <!-- Back Button -->
+    <a href="@Url.Action("Students", "Admin")" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-right"></i> العودة للقائمة
+    </a>
+
+    <!-- Student Info Card -->
+    <div class="info-card">
+        <h3>
+            <i class="fas fa-user-graduate"></i>
+            معلومات الطالب
+        </h3>
+        <div class="info-row">
+            <span class="info-label">الاسم:</span>
+            <span class="info-value">@Model.FullName</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">الرقم الجامعي:</span>
+            <span class="info-value">@Model.StudentId</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">رقم الإقامة:</span>
+            <span class="info-value">@Model.ResidencyId</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">الهاتف:</span>
+            <span class="info-value">@Model.Phone</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">البريد الإلكتروني:</span>
+            <span class="info-value">@Model.Email</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">المرحلة:</span>
+            <span class="info-value">
+                @if(@Model.Thesis == null){
+                    <span class="status-badge" style="background: #dbeafe; color: #1e40af;">لم تسجل رسالة</span>
+                }else {
+                    @if(@Model.Thesis.DegreeType == "master")
+                    {
+                        <span class="status-badge" style="background: #dbeafe; color: #1e40af;">ماجستير</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge" style="background: #fef3c7; color: #92400e;">دكتوراه</span>
+                    }
+                }
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">المسار:</span>
+            @if(@Model.Thesis == null){
+                <span class="info-value">لم تسجل رسالة</span>
+            }else{
+                <span class="info-value">@Model.Thesis.TrackName</span>
+            }
+        </div>
+        <div class="info-row">
+            <span class="info-label">المرشد الأكاديمي:</span>
+            <span class="info-value">@Model.TutorName</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">المشرف:</span>
+            <span class="info-value">@(Model.SupervisorName ?? "لم يتم التعيين")</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">تاريخ التسجيل:</span>
+            <span class="info-value">@Model.EnrollmentDate.ToString("yyyy-MM-dd")</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">تاريخ الإنجاز الحالي:</span>
+            <span class="info-value" style="font-weight: bold; color: var(--warning-orange);">
+                @Model.CurrentDeadline?.ToString("yyyy-MM-dd")
+            </span>
+        </div>
+    </div>
+
+    <!-- Progress Steps Visualization -->
+    <h3 style="color: var(--primary-blue); margin: 2rem 0 1rem;">
+        <i class="fas fa-tasks"></i>
+        مراحل إنجاز الرسالة
+    </h3>
+
+    <div class="progress-steps">
+        @for(int i = 1; i <= Model.AllSteps.Count; i++)
+        {
+            var CurrentStep = Model.AllSteps.FirstOrDefault(sd => sd.StepNumber == i);
+            var step = Model.StepHistory.FirstOrDefault(s => s.StepNumber == i);
+            var stepClass = step == null ? "pending" : 
+                           (step.Status == "completed" ? "completed" : 
+                           (i == Model.CurrentStep ? "current" : "pending"));
+
+            <div class="step @stepClass" onclick="showStepModal(@i, '@stepClass', @(step != null ? "true" : "false"))">
+                <div class="step-number">@i</div>
+                <div class="step-label">
+                    @(CurrentStep?.StepNameAr ?? Model.AllSteps.FirstOrDefault()?.StepNameAr ?? $"خطوة {i}")
+                </div>
+            </div>
+
+            @if(i < Model.AllSteps.Count)
+            {
+                <div class="step-connector"></div>
+            }
+        }
+    </div>
+
+    <!-- Current Step Info -->
+    <div class="info-card" style="margin-top: 2rem;">
+        <h3>الخطوة الحالية</h3>
+        <div class="info-row">
+            <span class="info-label">الخطوة:</span>
+            <span class="info-value" style="font-weight: bold;">
+                خطوة @Model.CurrentStep: @Model.StepHistory.FirstOrDefault(s => s.StepNumber == Model.CurrentStep)?.StepNameAr
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">تاريخ البداية:</span>
+            <span class="info-value">
+                @Model.StepHistory.FirstOrDefault(s => s.StepNumber == Model.CurrentStep)?.StartDate.ToString("yyyy-MM-dd")
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">الموعد الأصلي:</span>
+            <span class="info-value">
+                @Model.StepHistory.FirstOrDefault(s => s.StepNumber == Model.CurrentStep)?.OriginalDeadline.ToString("yyyy-MM-dd")
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">الموعد النهائي:</span>
+            <span class="info-value">@Model.CurrentDeadline?.ToString("yyyy-MM-dd")</span>
+        </div>
+        
+        @if(!isReadOnly)
+        {
+            <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                <button class="btn btn-warning" onclick="showExtendDeadlineModal(@Model.CurrentStep)">
+                    <i class="fas fa-calendar-plus"></i>
+                    تمديد الموعد
+                </button>
+                <button class="btn btn-success" onclick="showCompleteStepModal(@Model.CurrentStep)">
+                    <i class="fas fa-check-circle"></i>
+                    إنهاء الخطوة
+                </button>
+            </div>
+        }
+    </div>
+
+    <!-- Thesis Details -->
+    @if(Model.Thesis != null)
+    {
+        <div class="info-card" style="margin-top: 2rem;">
+            <h3>
+                <i class="fas fa-book"></i>
+                تفاصيل الرسالة
+            </h3>
+
+            @if(!string.IsNullOrEmpty(Model.Thesis.IdeaTitle))
+            {
+                <div class="info-row">
+                    <span class="info-label">عنوان الفكرة:</span>
+                    <span class="info-value">@Model.Thesis.IdeaTitle</span>
+                </div>
+            }
+
+            @if(!string.IsNullOrEmpty(Model.Thesis.TitleAr))
+            {
+                <div class="info-row">
+                    <span class="info-label">عنوان الرسالة:</span>
+                    <span class="info-value" style="font-weight: bold;">@Model.Thesis.TitleAr</span>
+                </div>
+            }
+
+            @if(Model.Thesis.DefenseDate.HasValue)
+            {
+                <div class="info-row">
+                    <span class="info-label">تاريخ المناقشة:</span>
+                    <span class="info-value">@Model.Thesis.DefenseDate?.ToString("yyyy-MM-dd")</span>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Step History Table -->
+    <h3 style="color: var(--primary-blue); margin: 2rem 0 1rem;">
+        <i class="fas fa-history"></i>
+        سجل الخطوات المكتملة
+    </h3>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>الخطوة</th>
+                <th>تاريخ البداية</th>
+                <th>الموعد الأصلي</th>
+                <th>تاريخ الإنجاز</th>
+                <th>المدة (أيام)</th>
+                <th>الحالة</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var step in Model.StepHistory.Where(s => s.Status == "completed"))
+            {
+                <tr>
+                    <td style="font-weight: bold;">
+                        خطوة @step.StepNumber: @step.StepNameAr
+                    </td>
+                    <td>@step.StartDate.ToString("yyyy-MM-dd")</td>
+                    <td>@step.OriginalDeadline.ToString("yyyy-MM-dd")</td>
+                    <td>@step.CompletionDate?.ToString("yyyy-MM-dd")</td>
+                    <td>@step.DaysToComplete</td>
+                    <td>
+                        @if(step.WasLate)
+                        {
+                            <span class="status-badge status-overdue">متأخر</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-active">في الموعد</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal: Extend Deadline -->
+<div class="modal-overlay" id="extendDeadlineModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تمديد الموعد النهائي</h3>
+            <button class="close-modal" onclick="closeModal('extendDeadlineModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="post" action="@Url.Action("ExtendDeadline", "Admin")">
+            <input type="hidden" name="studentId" value="@Model.Id" />
+            <input type="hidden" name="stepNumber" id="extendStepNumber" />
+            <div class="form-group">
+                <label>الموعد الجديد</label>
+                <input type="date" name="newDeadline" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-save"></i>
+                حفظ
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Complete Step -->
+<div class="modal-overlay" id="completeStepModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>إنهاء الخطوة</h3>
+            <button class="close-modal" onclick="closeModal('completeStepModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="post" action="@Url.Action("CompleteStep", "Admin")">
+            <input type="hidden" name="studentId" value="@Model.Id" />
+            <input type="hidden" name="stepNumber" id="completeStepNumber" />
+            <div class="form-group">
+                <label>تاريخ الإنجاز</label>
+                <input type="date" name="completionDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+            </div>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 1rem;">
+                سيتم الانتقال تلقائياً إلى الخطوة التالية
+            </p>
+            <button type="submit" class="btn btn-success" style="width: 100%;">
+                <i class="fas fa-check"></i>
+                إنهاء وانتقل للخطوة التالية
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Step Details -->
+<div class="modal-overlay" id="stepDetailsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="stepModalTitle">تفاصيل الخطوة</h3>
+            <button class="close-modal" onclick="closeModal('stepDetailsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="stepModalContent">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showExtendDeadlineModal(stepNumber) {
+            document.getElementById('extendStepNumber').value = stepNumber;
+            document.getElementById('extendDeadlineModal').classList.add('active');
+        }
+
+        function showCompleteStepModal(stepNumber) {
+            document.getElementById('completeStepNumber').value = stepNumber;
+            document.getElementById('completeStepModal').classList.add('active');
+        }
+
+        function showStepModal(stepNumber, stepClass, hasData) {
+            const modal = document.getElementById('stepDetailsModal');
+            const title = document.getElementById('stepModalTitle');
+            const content = document.getElementById('stepModalContent');
+
+            title.textContent = `الخطوة ${stepNumber}`;
+
+            if (stepClass === 'completed') {
+                content.innerHTML = '<p>تم إنجاز هذه الخطوة</p>';
+            } else if (stepClass === 'current') {
+                content.innerHTML = '<p>الخطوة الحالية</p>';
+            } else {
+                content.innerHTML = '<p>لم تبدأ هذه الخطوة بعد</p>';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modals on outside click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal(this.id);
+                }
+            });
+        });
+    </script>
+}
