@@ -1,23 +1,276 @@
 <!doctype html>
-<html>
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>مدير الأطروحة</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" />
     <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --lighter-blue: #60a5fa;
+            --lightest-blue: #dbeafe;
+            --dark-blue: #1e3a8a;
+            --accent-blue: #0ea5e9;
+            --bg-gradient: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%);
+        }
+
+        * {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+        }
+
+        body {
+            direction: rtl;
+            text-align: right;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+        }
+
+        /* Header styling */
+        .header-section {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Container styling */
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        /* Big buttons with blue theme */
         .big-btn {
             width: 220px;
             height: 80px;
             font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
         }
-        tr.clickable { cursor: pointer; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(30, 64, 175, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #047857 0%, #059669 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(5, 150, 105, 0.3);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--lighter-blue) 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(135deg, #0284c7 0%, var(--accent-blue) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            transform: translateY(-2px);
+        }
+
+        /* Table styling */
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.08);
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: white;
+        }
+
+        .table thead th {
+            padding: 1rem;
+            font-weight: bold;
+            border: none;
+        }
+
+        .table thead th a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .table thead th a:hover {
+            color: var(--lightest-blue);
+            text-decoration: underline;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(219, 234, 254, 0.3);
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        tr.clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        tr.clickable:hover {
+            background-color: var(--lightest-blue) !important;
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.15);
+        }
+
+        /* Form styling */
+        .form-control,
+        .form-select {
+            border: 2px solid var(--lightest-blue);
+            border-radius: 8px;
+            padding: 0.75rem;
+            transition: border-color 0.3s;
+            text-align: right;
+            direction: rtl;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--light-blue);
+            box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        h2, h3 {
+            color: var(--primary-blue);
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--lightest-blue);
+        }
+
+        /* Card styling for details pages */
+        .info-card {
+            background: linear-gradient(135deg, var(--lightest-blue) 0%, white 100%);
+            border-right: 5px solid var(--light-blue);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-card strong {
+            color: var(--primary-blue);
+        }
+
+        /* Responsive adjustments */
+        @@media (max-width: 768px) {
+            .big-btn {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+
+            .header-section h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--lightest-blue);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--light-blue);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-blue);
+        }
+
+        /* Text alignment for inputs */
+        input[type="text"],
+        input[type="date"],
+        input[type="email"],
+        textarea,
+        select {
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Numbers should be LTR even in RTL layout */
+        input[type="number"] {
+            direction: ltr;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
-    <div class="container py-4">
-        <h1 class="mb-3">مدير الأطروحة</h1>
+    <div class="header-section">
+        <div class="container-fluid px-4">
+            <h1>📚 مدير الأطروحة</h1>
+        </div>
+    </div>
+
+    <div class="container">
         @RenderBody()
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
